@@ -1,0 +1,37 @@
+def run(self):
+    rospy.loginfo("Starting forward walk with drift correction...")
+
+    rate = rospy.Rate(10)  # 10 Hz correction loop
+    walk_duration = 17.0  # seconds
+    walk_speed = 0.02
+    base_yaw = 0.0
+
+    # Record initial yaw
+    start_yaw = self.yaw
+    start_time = time.time()
+
+    self.gait.move(1, walk_speed, 0, 0)  # Start walking straight
+
+    while not rospy.is_shutdown():
+        now = time.time()
+        elapsed = now - start_time
+
+        if elapsed >= walk_duration:
+            break
+
+        # Drift = current - starting yaw
+        drift = self.normalize_angle(self.yaw - start_yaw)
+
+        # Simple proportional correction
+        correction = -5.0 * drift  # you can tune this factor
+        correction = max(min(correction, 3.0), -3.0)  # limit to [-3, 3]
+
+        # Apply corrected walking
+        self.gait.move(1, walk_speed, 0, correction)
+
+        rospy.loginfo_throttle(0.5, f"Yaw drift: {drift:.2f} → correction: {correction:.2f}")
+
+        rate.sleep()
+
+    self.gait.stop()
+    rospy.loginfo("Walk complete with drift correction.")

@@ -44,6 +44,9 @@ class VisualPatrolNode(Common):
         self.marker_navigation_active = False
         self.waiting_for_next_marker = False
 
+        self.line_lost_start_time = None
+        self.line_loss_hold_time = 0.3  # seconds
+
         if rospy.get_param('~start', True):
             target_color = rospy.get_param('~color', 'black')
             self.enter_func(None)
@@ -101,30 +104,32 @@ class VisualPatrolNode(Common):
             # PHASE 1: Line Following
             if self.line_following_active:
                 if line_data is not None:
+                    self.line_lost_start_time = None
                     self.visual_patrol.process(line_data.x, line_data.width)
                 else:
-                    # Line lost 竊・switch to marker mode
-                    self.line_following_active = False
-                    self.marker_navigation_active = True
-                    common.loginfo("Line ended 窶・switching to marker mode")
+                    if self.line_lost_start_time is None:
+                        self.line_lost_start_time = time.time()
+                    elif time.time() - self.line_lost_start_time >= self.line_loss_hold_time:
+                        self.line_following_active = False
+                        self.marker_navigation_active = True
+                        common.loginfo("Line ended — switching to marker mode")
 
             # PHASE 2: Marker Navigation
             elif self.marker_navigation_active:
                 if not self.waiting_for_next_marker and self.arrow_direction in ["left", "right", "forward"]:
                     common.loginfo(f"Marker detected: {self.arrow_direction}")
-            
+                
                     if self.arrow_direction == "left":
                         self.gait_manager.move(1, 0, 0, -10)
                         time.sleep(5.3)
-            
+                
                     elif self.arrow_direction == "right":
                         self.gait_manager.move(1, 0, 0, 10)
                         time.sleep(5.3)
 
                     if self.arrow_direction in ["left", "right", "forward"]:
-                        # After turn or forward marker 窶・start forward motion
                         self.gait_manager.move(1, 0.02, 0, 0)
-                        self.waiting_for_next_marker = True  # move forward until next marker
+                        self.waiting_for_next_marker = True
 
                     self.arrow_direction = "none"
                     self.arrow_last_action_time = time.time()
@@ -132,8 +137,7 @@ class VisualPatrolNode(Common):
                 elif self.waiting_for_next_marker and self.arrow_direction in ["left", "right", "forward"]:
                     self.gait_manager.stop()
                     self.waiting_for_next_marker = False
-                    common.loginfo("Next marker detected 窶・stopping and waiting")
-
+                    common.loginfo("Next marker detected — stopping and waiting")
 
             time.sleep(0.01)
 

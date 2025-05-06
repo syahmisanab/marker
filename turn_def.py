@@ -9,26 +9,29 @@ def turn_180(self, direction="right"):
     last_yaw = self.yaw
     last_time = rospy.Time.now().to_sec()
 
-    rospy.loginfo("Starting IMU turn tracking...")
+    rospy.loginfo("Starting 180° turn using IMU...")
 
     while not rospy.is_shutdown():
         now = rospy.Time.now().to_sec()
         dt = now - last_time
         last_time = now
 
-        # Calculate change in yaw
         current_yaw = self.yaw
         delta_yaw = self.normalize_angle(current_yaw - last_yaw)
         last_yaw = current_yaw
 
-        total_angle += abs(delta_yaw)
+        # Track only yaw in the correct direction
+        if direction == "right" and delta_yaw > 0:
+            total_angle += delta_yaw
+        elif direction == "left" and delta_yaw < 0:
+            total_angle -= delta_yaw
 
-        rospy.loginfo_throttle(0.5, f"Turned: {total_angle:.2f} rad")
+        rospy.loginfo_throttle(0.5, f"Total yaw: {total_angle:.2f} rad")
 
-        if total_angle >= 3.14:  # 180 degrees
+        if total_angle >= 3.14:
             break
 
         rate.sleep()
 
     self.gait.stop()
-    rospy.loginfo("180° turn complete.")
+    rospy.loginfo("IMU-based 180° turn complete.")

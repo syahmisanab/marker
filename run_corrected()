@@ -1,0 +1,31 @@
+def walk_forward_with_correction(self, duration, speed=0.02):
+    rospy.loginfo(f"Walking forward {duration}s with correction...")
+
+    rate = rospy.Rate(10)
+    start_yaw = self.yaw
+    start_time = time.time()
+
+    self.gait.move(1, speed, 0, 0)
+
+    while not rospy.is_shutdown():
+        now = time.time()
+        elapsed = now - start_time
+
+        if elapsed >= duration:
+            break
+
+        drift = self.normalize_angle(self.yaw - start_yaw)
+        correction = -5.0 * drift
+        correction = max(min(correction, 3.0), -3.0)
+
+        self.gait.move(1, speed, 0, correction)
+
+        rospy.loginfo_throttle(0.5, f"Drift: {drift:.2f} → Yaw Correction: {correction:.2f}")
+        rate.sleep()
+
+    self.gait.stop()
+    rospy.loginfo("Walk done.")
+def run(self):
+    self.walk_forward_with_correction(17.0)
+    self.turn_180(direction="right")
+    self.walk_forward_with_correction(16.0)

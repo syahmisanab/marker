@@ -15,6 +15,7 @@ This repo is designed for team members and students working with the Ainex robot
 ### 1. Clone the repository
 
 ```bash
+cd ~/ros_ws/src/ainex_example
 git clone https://github.com/syahmisanab/marker.git
 cd marker
 ```

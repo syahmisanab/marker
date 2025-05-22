@@ -20,7 +20,7 @@ These are typically used during the **Marathon** event in FIRA HuroCup, where th
 
 📍 Location:
 ```
-/home/ubuntu/ros_ws/src/ainex_example/scripts/marker/arrow_detection_node.py
+~/ros_ws/src/ainex_example/scripts/marker/hurocup/Arrow Detection
 ```
 
 ▶️ Run with:

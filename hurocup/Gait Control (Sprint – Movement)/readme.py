@@ -27,4 +27,3 @@ or using ROS:
 rosrun ainex_tutorial move_forward.py
 ```
 
----

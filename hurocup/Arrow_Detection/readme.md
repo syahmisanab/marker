@@ -20,7 +20,7 @@ These are typically used during the **Marathon** event in FIRA HuroCup, where th
 
 📍 Location:
 ```
-~/ros_ws/src/ainex_example/scripts/marker/hurocup/Arrow Detection
+~/ros_ws/src/ainex_example/scripts/marker/hurocup/Arrow_Detection
 ```
 
 ▶️ Run with:

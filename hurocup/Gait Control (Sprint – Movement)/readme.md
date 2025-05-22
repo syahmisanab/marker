@@ -1,10 +1,10 @@
-# Gait Control - Sprint Movement (Ainex Robot)
+# 🦿 Gait Control - Sprint Movement (Ainex Robot)
 
 This directory contains a basic walking demo script used for the **Sprint** event in the FIRA HuroCup. It demonstrates forward walking using Ainex's `GaitManager`.
 
 ---
 
-## Script Overview
+## 🚀 Script Overview
 
 ### `move_forward.py`
 
@@ -13,12 +13,12 @@ This directory contains a basic walking demo script used for the **Sprint** even
 - Optionally modifies pelvis offset, step height, and body posture
 - Requires Ainex robot with correct action group path
 
-File location:
+📍 File location:
 ```
 /home/ubuntu/ros_ws/src/ainex_tutorial/scripts/gait_control/move_forward.py
 ```
 
-Run with:
+▶️ Run with:
 ```bash
 python3 move_forward.py
 ```
@@ -28,5 +28,3 @@ rosrun ainex_tutorial move_forward.py
 ```
 
 ---
-
-

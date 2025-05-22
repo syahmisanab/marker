@@ -16,7 +16,7 @@ This script controls the robot for the **Marathon** game in FIRA HuroCup. It ena
 
 📍 File location:
 ```
-/home/ubuntu/ros_ws/src/ainex_example/scripts/marker/marathon_node.py
+~/ros_ws/src/ainex_example/scripts/marker/hurocup
 ```
 
 ▶️ Run with:

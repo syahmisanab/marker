@@ -1,4 +1,4 @@
-# ?? Visual Line Patrol Node - Ainex Robot
+# 🧭 Visual Line Patrol Node - Ainex Robot
 
 This node is used for real-time line following using the robot's head-mounted camera. It tracks a black line on the ground and dynamically adjusts walking direction.
 
@@ -6,7 +6,7 @@ This is typically used for the **Marathon** event in FIRA HuroCup.
 
 ---
 
-## ?? Script Overview
+## 🚀 Script Overview
 
 ### `visual_patrol_node.py`
 
@@ -15,19 +15,19 @@ This is typically used for the **Marathon** event in FIRA HuroCup.
 - Uses `VisualPatrol` + `GaitManager` for real-time correction
 - Includes head positioning and walk-ready initialization
 
-?? File location:
+📍 File location:
 ```
 /home/ubuntu/ros_ws/src/ainex_example/scripts/visual_patrol/visual_patrol_node.py
 ```
 
-?? Run with:
+▶️ Run with:
 ```bash
 rosrun ainex_example visual_patrol_node.py
 ```
 
 ---
 
-## ?? Features
+## 🛠 Features
 
 - Three ROIs are scanned (top-down)
 - If any black line is detected → reacts immediately
@@ -36,7 +36,7 @@ rosrun ainex_example visual_patrol_node.py
 
 ---
 
-## ?? Requirements
+## 📦 Requirements
 
 - ROS (Melodic/Noetic)
 - `ainex_sdk`, `ainex_interfaces`, `ainex_kinematics`

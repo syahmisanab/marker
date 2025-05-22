@@ -11,7 +11,7 @@ from ainex_example.visual_patrol import VisualPatrol
 from ainex_interfaces.srv import SetString
 from ainex_interfaces.msg import ObjectsInfo, ColorDetect
 
-class VisualPatrolReactiveNode(Common):
+class VisualPatrolNode(Common):
     line_roi = [
         (5 / 12, 6 / 12, 1 / 4, 3 / 4),
         (6 / 12, 7 / 12, 1 / 4, 3 / 4),
@@ -33,14 +33,21 @@ class VisualPatrolReactiveNode(Common):
 
         rospy.Subscriber("/arrow/shape_direction", String, self.arrow_callback)
         self.arrow_direction = "none"
-        self.arrow_last_handled_time = 0
-        self.arrow_cooldown = 3.0  # seconds
-        self.handled_arrow = False
+        self.last_arrow_msg = "none"
+        self.arrow_stable_start_time = None
+        self.arrow_stable_threshold = 0.5  # seconds
 
         rospy.Subscriber('/object/pixel_coords', ObjectsInfo, self.get_color_callback)
         rospy.Service('~set_color', SetString, self.set_color_srv_callback)
 
         self.motion_manager.run_action('walk_ready')
+
+        self.line_following_active = True
+        self.marker_navigation_active = False
+        self.waiting_for_next_marker = False
+
+        self.line_lost_start_time = None
+        self.line_loss_hold_time = 0.3  # seconds
 
         if rospy.get_param('~start', True):
             target_color = rospy.get_param('~color', 'black')
@@ -50,7 +57,12 @@ class VisualPatrolReactiveNode(Common):
             common.loginfo('start track %s lane' % target_color)
 
     def arrow_callback(self, msg):
-        self.arrow_direction = msg.data.lower().strip()
+        current_time = time.time()
+        if msg.data != self.last_arrow_msg:
+            self.last_arrow_msg = msg.data
+            self.arrow_stable_start_time = current_time
+        elif self.arrow_stable_start_time and (current_time - self.arrow_stable_start_time >= self.arrow_stable_threshold):
+            self.arrow_direction = msg.data
 
     def shutdown(self, signum, frame):
         with self.lock:
@@ -90,51 +102,57 @@ class VisualPatrolReactiveNode(Common):
         self.objects_info = msg.data
 
     def run(self):
-        rate = rospy.Rate(30)
-
         while self.running:
             line_data = None
             for object_info in self.objects_info:
                 if object_info.type == 'line':
                     line_data = object_info
 
-            # Real-time line following (always active)
-            if line_data is not None:
-                self.visual_patrol.process(line_data.x, line_data.width)
+            # PHASE 1: Line Following
+            if self.line_following_active:
+                if line_data is not None:
+                    self.line_lost_start_time = None
+                    self.visual_patrol.process(line_data.x, line_data.width)
+                else:
+                    if self.line_lost_start_time is None:
+                        self.line_lost_start_time = time.time()
+                    elif time.time() - self.line_lost_start_time >= self.line_loss_hold_time:
+                        self.line_following_active = False
+                        self.marker_navigation_active = True
+                        common.loginfo("Line ended – switching to marker mode")
 
-            # Real-time marker detection (with cooldown)
-            now = time.time()
-            if self.arrow_direction in ["left", "right", "forward"] and not self.handled_arrow:
-                rospy.loginfo(f"Arrow marker detected: {self.arrow_direction}")
+            # PHASE 2: Marker Navigation
+            elif self.marker_navigation_active:
+                if not self.waiting_for_next_marker and self.arrow_direction in ["left", "right", "forward"]:
+                    common.loginfo(f"Marker detected: {self.arrow_direction}")
+                
+                    if self.arrow_direction == "left":
+                        self.gait_manager.move(1, 0, 0, -10)
+                        time.sleep(5.3)
+                
+                    elif self.arrow_direction == "right":
+                        self.gait_manager.move(1, 0, 0, 10)
+                        time.sleep(5.3)
 
-                if self.arrow_direction == "left":
-                    self.gait_manager.move(1, 0, 0, -10)
-                    time.sleep(5.3)
+                    if self.arrow_direction in ["left", "right", "forward"]:
+                        self.gait_manager.move(1, 0.02, 0, 0)
+                        self.waiting_for_next_marker = True
+
+                    self.arrow_direction = "none"
+                    self.last_arrow_msg = "none"
+                    self.arrow_stable_start_time = None
+                    self.arrow_last_action_time = time.time()
+
+                elif self.waiting_for_next_marker and self.arrow_direction in ["left", "right", "forward"]:
                     self.gait_manager.stop()
-                elif self.arrow_direction == "right":
-                    self.gait_manager.move(1, 0, 0, 10)
-                    time.sleep(5.3)
-                    self.gait_manager.stop()
+                    self.waiting_for_next_marker = False
+                    common.loginfo("Next marker detected – stopping and waiting")
 
-                # Walk forward after any arrow
-                self.gait_manager.move(1, 0.02, 0, 0)
-                time.sleep(2.5)
-                self.gait_manager.stop()
-
-                # Reset detection
-                self.handled_arrow = True
-                self.arrow_last_handled_time = now
-                self.arrow_direction = "none"
-
-            # Cooldown reset
-            if self.handled_arrow and now - self.arrow_last_handled_time > self.arrow_cooldown:
-                self.handled_arrow = False
-
-            rate.sleep()
+            time.sleep(0.01)
 
         self.init_action(self.head_pan_init, self.head_tilt_init)
         self.stop_srv_callback(None)
         rospy.signal_shutdown('shutdown')
 
 if __name__ == "__main__":
-    VisualPatrolReactiveNode('visual_patrol_reactive').run()
+    VisualPatrolNode('visual_patrol').run()

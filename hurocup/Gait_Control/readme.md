@@ -15,7 +15,7 @@ This directory contains a basic walking demo script used for the **Sprint** even
 
 📍 File location:
 ```
-~/ros_ws/src/ainex_example/scripts/marker/hurocup/Gait Control (Sprint – Movement)
+~/ros_ws/src/ainex_example/scripts/marker/hurocup/Gait_Control
 ```
 
 ▶️ Run with:

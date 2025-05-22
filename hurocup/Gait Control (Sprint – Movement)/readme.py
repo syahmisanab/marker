@@ -27,3 +27,16 @@ or using ROS:
 rosrun ainex_tutorial move_forward.py
 ```
 
+---
+
+## 🛠 Dependencies
+
+- ROS (Melodic or Noetic)
+- `ainex_kinematics` package
+- Python 3
+- Ainex hardware platform
+
+---
+
+Make sure the robot is standing in `walk_ready` posture before running this script. You can use `motion_manager.run_action('walk_ready')` if needed.
+

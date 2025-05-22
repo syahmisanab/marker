@@ -17,7 +17,8 @@ This is typically used for the **Marathon** event in FIRA HuroCup.
 
 📍 File location:
 ```
-/home/ubuntu/ros_ws/src/ainex_example/scripts/visual_patrol/visual_patrol_node.py
+~/ros_ws/src/ainex_example/scripts/marker/hurocup/Line Following (Visual Patrol)
+
 ```
 
 ▶️ Run with:

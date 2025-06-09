@@ -104,7 +104,7 @@ class VisualPatrolNode(Common):
 
     def get_color_callback(self, msg):
         with self.lock:
-            self.objects_info = msg.objects
+            self.objects_info = msg.data
 
     def run(self):
         rate = rospy.Rate(100)

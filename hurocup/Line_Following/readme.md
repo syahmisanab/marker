@@ -120,5 +120,3 @@ rostopic echo /object/pixel_coords
 * Debug and observe sensor-actuator loops using ROS topics
 
 ---
-
-Let me know if you want to integrate marker detection or support dynamic path switching!

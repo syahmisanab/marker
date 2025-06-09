@@ -31,12 +31,8 @@ dsp = [400, 0.2, 0.02]
 gait_manager.move(1, 0.02, 0, 0)  # Forward speed = 0.02
 time.sleep(17)  # Move forward for 17 seconds
 
-# Turn 180 degrees in place
-gait_manager.move(1, 0, 0, 10)  # Yaw rate = 10
-time.sleep(5.3)  # Turn duration for 180ﾂｰ
-
-# Move forward again
-gait_manager.move(1, 0.02, 0, 0)
+# Move backward again
+gait_manager.move(1, -0.02, 0, 0)
 time.sleep(16)
 
 # Stop walking

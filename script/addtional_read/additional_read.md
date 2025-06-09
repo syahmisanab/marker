@@ -1,4 +1,5 @@
 
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0002.jpg)
 
 
 ## ROS Overview

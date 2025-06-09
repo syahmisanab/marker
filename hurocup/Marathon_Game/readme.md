@@ -143,11 +143,10 @@ rosservice call /visual_patrol/set_color "data: 'blue'"
 
 ### `marathon_node.py`
 
-* **Phase 1**: Follows a black line using `VisualPatrol`
-* **Phase 2**: Upon losing the line, transitions to arrow marker detection
-* Detects direction from `/arrow/shape_direction`
-* Turns left/right or continues forward based on marker
-* Uses `GaitManager` to walk and rotate
+* **Line Following**: Track a colored line using image detection.
+* **Marker Recognition**: While following the line, the robot monitors for directional markers.
+* **Line Loss + Action**: When the line is lost, the robot executes a turn or move based on the last marker seen.
+* **Line Search**: After turning, it slowly walks forward until the line is found again, then resumes following.
 
 📍 File location:
 
@@ -165,11 +164,14 @@ rosrun ainex_example marathon_node.py
 
 ## 🧠 Behavior Logic
 
-* Robot follows line using pixel position + width
-* If line is lost for a short duration, switches to arrow mode
-* Listens for `"left"`, `"right"`, or `"forward"` arrow messages
-* Rotates appropriately and resumes walking forward
-* Keeps walking until it finds the new line
+* The robot continuously follows the line.
+* While following, it listens for arrow marker messages.
+* If the line is lost for more than 0.2s:
+
+  * It uses the last known marker direction to rotate or move.
+  * Then it walks forward slowly, looking for a new line.
+* Once the new line is detected, it resumes following.
+* The cycle repeats: line → marker → turn → line reacquire → line.
 
 ---
 

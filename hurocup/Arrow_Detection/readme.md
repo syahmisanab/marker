@@ -157,5 +157,3 @@ chmod +x turn_arrow_node.py
 * Work with services to control stateful behavior (e.g. one-time turns)
 
 ---
-
-Let me know if you want to integrate this with the line-following node or combine both into a single decision framework.

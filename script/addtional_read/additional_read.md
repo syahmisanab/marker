@@ -82,7 +82,7 @@ Understanding the core concepts of ROS is essential for building reliable and mo
 
 ---
 
-### ### Nodes
+ ### Nodes
 
 A **node** is a basic unit of execution in ROS. Each node is a separate program that performs one task, such as reading sensor data, controlling motors, or processing images.
 
@@ -94,7 +94,7 @@ A **node** is a basic unit of execution in ROS. Each node is a separate program 
 
 ---
 
-### ### Messages and Topics
+ ### Messages and Topics
 
 Nodes in ROS **communicate** with each other using messages. These messages are passed through **topics**, which act like communication channels.
 
@@ -106,7 +106,7 @@ Nodes in ROS **communicate** with each other using messages. These messages are 
 
 ---
 
-### ### Services
+ ### Services
 
 While topics are used for continuous data streams, **services** are used for request-response communication.
 
@@ -117,7 +117,7 @@ While topics are used for continuous data streams, **services** are used for req
 
 ---
 
-### ### ROS Master
+ ### ROS Master
 
 The **ROS Master** is the name server and central coordinator in any ROS system.
 
@@ -129,7 +129,7 @@ The **ROS Master** is the name server and central coordinator in any ROS system.
 
 ---
 
-### ### Parameters
+### Parameters
 
 ROS provides a **parameter server** where nodes can store and retrieve values at runtime.
 
@@ -140,7 +140,7 @@ ROS provides a **parameter server** where nodes can store and retrieve values at
 
 ---
 
-### ### Stacks and Packages
+### Stacks and Packages
 
 In ROS, code is organized into **packages**, and related packages are often grouped into **stacks**.
 

@@ -41,14 +41,15 @@ class VisualPatrolNode(Common):
         rospy.Service('~set_color', SetString, self.set_color_srv_callback)
 
         self.arrow_direction = "none"
-        self.arrow_last_action_time = 0
+        self.last_marker_direction = "none"
 
         self.motion_manager.run_action('walk_ready')
 
         self.line_following_active = True
         self.marker_navigation_active = False
-        self.waiting_for_next_marker = False
+        self.line_search_active = False
 
+        self.waiting_for_next_marker = False
         self.line_lost_start_time = None
         self.line_loss_hold_time = 0.3  # seconds
 
@@ -61,6 +62,7 @@ class VisualPatrolNode(Common):
 
     def arrow_callback(self, msg):
         self.arrow_direction = msg.data
+        self.last_marker_direction = msg.data
 
     def shutdown(self, signum, frame):
         with self.lock:
@@ -102,10 +104,10 @@ class VisualPatrolNode(Common):
 
     def get_color_callback(self, msg):
         with self.lock:
-            self.objects_info = msg.objects  # or msg.data if that's correct in your msg
+            self.objects_info = msg.objects
 
     def run(self):
-        rate = rospy.Rate(100)  # 100 Hz loop
+        rate = rospy.Rate(100)
         while self.running:
             line_data = None
             with self.lock:
@@ -114,7 +116,6 @@ class VisualPatrolNode(Common):
                         line_data = object_info
                         break
 
-            # PHASE 1: Line Following
             if self.line_following_active:
                 if line_data is not None:
                     self.line_lost_start_time = None
@@ -127,30 +128,33 @@ class VisualPatrolNode(Common):
                         self.marker_navigation_active = True
                         common.loginfo("Line ended – switching to marker mode")
 
-            # PHASE 2: Marker Navigation
             elif self.marker_navigation_active:
-                if not self.waiting_for_next_marker and self.arrow_direction in ["left", "right", "forward"]:
-                    common.loginfo(f"Marker detected: {self.arrow_direction}")
+                if self.last_marker_direction in ["left", "right", "forward"]:
+                    common.loginfo(f"Following marker: {self.last_marker_direction}")
 
-                    if self.arrow_direction == "left":
+                    if self.last_marker_direction == "left":
                         self.gait_manager.move(1, 0, 0, -10)
                         time.sleep(5.3)
-
-                    elif self.arrow_direction == "right":
+                    elif self.last_marker_direction == "right":
                         self.gait_manager.move(1, 0, 0, 10)
                         time.sleep(5.3)
-
-                    if self.arrow_direction in ["left", "right", "forward"]:
+                    elif self.last_marker_direction == "forward":
                         self.gait_manager.move(1, 0.02, 0, 0)
-                        self.waiting_for_next_marker = True
+                        time.sleep(3.0)
 
-                    self.arrow_direction = "none"
-                    self.arrow_last_action_time = time.time()
-
-                elif self.waiting_for_next_marker and self.arrow_direction in ["left", "right", "forward"]:
                     self.gait_manager.stop()
-                    self.waiting_for_next_marker = False
-                    common.loginfo("Next marker detected – stopping and waiting")
+                    self.marker_navigation_active = False
+                    self.line_search_active = True
+                    self.last_marker_direction = "none"
+                    common.loginfo("Entering line search mode")
+
+            elif self.line_search_active:
+                if line_data is not None:
+                    self.line_search_active = False
+                    self.line_following_active = True
+                    common.loginfo("Line found – resuming line following")
+                else:
+                    self.gait_manager.move(1, 0, 0, 5)  # slow rotate right
 
             rate.sleep()
 

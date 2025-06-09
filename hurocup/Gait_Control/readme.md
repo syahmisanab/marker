@@ -119,5 +119,3 @@ MotionManager('/home/ubuntu/software/ainex_controller/ActionGroups')
 * Learn timing and motion sequencing for competitions.
 
 ---
-
-Let me know if you’d like to add lateral or curved walking, obstacle stopping, or a ROS parameter interface for ga

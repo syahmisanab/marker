@@ -1,5 +1,5 @@
 
-![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0002.jpg)
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0004.jpg)
 
 
 ## ROS Overview
@@ -72,6 +72,10 @@ To summarize:
 
 ---
 
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0005.jpg)
+
+
+---
 ## ROS Core Concepts
 
 Understanding the core concepts of ROS is essential for building reliable and modular robotic systems. Below are the foundational elements that make up a typical ROS-based application.
@@ -153,6 +157,10 @@ Each of these concepts—nodes, topics, services, parameters, and more—contrib
 
 ---
 
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0006.jpg)
+
+
+---
 
 ## Basic ROS Commands
 
@@ -273,6 +281,10 @@ Mastering these commands will give you strong control over any ROS-based system 
 
 ---
 
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0007.jpg)
+
+
+---
 
 ## Python Basics for Robotics
 
@@ -388,6 +400,10 @@ Understanding Python basics will give you confidence to read, modify, and write 
 
 ---
 
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0008.jpg)
+
+
+---
 
 ## Linux System Basics for Robotics
 
@@ -512,7 +528,10 @@ This knowledge is essential when working on robotic platforms like AiNex, where 
 
 ---
 
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-0009.jpg)
 
+
+---
 ## Docker Basics (for AiNex)
 
 Docker is a tool used in many software and robotics projects—including AiNex—to simplify setup and ensure consistency across systems.
@@ -566,6 +585,10 @@ Whether you're debugging, deploying, or experimenting, Docker gives you a clean 
 
 ---
 
+![Ainex Training Page](https://github.com/syahmisanab/marker/raw/main/script/addtional_read/Ainex%20Competition%20Training_page-00010.jpg)
+
+
+---
 
 ## Ainex Controller
 

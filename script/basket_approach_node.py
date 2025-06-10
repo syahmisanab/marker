@@ -97,9 +97,23 @@ class ColorTrackNode(Common):
         ud_dis = self.ud_track.track(center.y, center.height / 2)
         self.motion_manager.set_servos_position(20, [[23, int(rl_dis)], [24, int(ud_dis)]])
 
-        # ✅ Publish the actual tracked object if available
-        if self.object_info and self.object_info.width > 0 and self.object_info.height > 0:
-            self.tracked_pub.publish(self.object_info)
+        # ✅ Publish actual detected object with int fields
+        if self.object_info:
+            try:
+                tracked = ObjectInfo()
+                tracked.label = self.object_info.label
+                tracked.type = self.object_info.type
+                tracked.x = int(self.object_info.x)
+                tracked.y = int(self.object_info.y)
+                tracked.width = int(self.object_info.width)
+                tracked.height = int(self.object_info.height)
+                tracked.radius = int(self.object_info.radius)
+                tracked.angle = int(self.object_info.angle)
+                tracked.left_point = [int(x) for x in self.object_info.left_point]
+                tracked.right_point = [int(x) for x in self.object_info.right_point]
+                self.tracked_pub.publish(tracked)
+            except Exception as e:
+                rospy.logwarn(f"[color_track] Failed to publish ObjectInfo: {e}")
 
     def run(self):
         while self.running:

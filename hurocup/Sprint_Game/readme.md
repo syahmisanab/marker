@@ -8,7 +8,7 @@ This folder contains ROS nodes used to execute and trigger the **Sprint** event 
 
 ### 🧠 Core Functionality
 
-#### `sprint_line_trigger.py` (Advanced)
+#### `Sprint_game_advance_node.py` (Advanced)
 
 * Waits for a white line to appear on `/object/pixel_coords`
 * Walks forward until the line is detected
@@ -84,7 +84,7 @@ rostopic echo /object/pixel_coords
 ~/ros_ws/src/ainex_example/scripts/marker/hurocup
 ```
 
-### `sprint_line_trigger.py`
+### `Sprint_game_advance_node.py`
 
 Detects white line trigger and performs a reverse move.
 

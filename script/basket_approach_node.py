@@ -1,137 +1,76 @@
 #!/usr/bin/env python3
 # encoding: utf-8
-import time
+
 import rospy
-import signal
-from std_msgs.msg import String
-from ainex_sdk import common, pid
-from ainex_example.cfg import PIDConfig
-from ainex_example.color_common import Common
-from ainex_example.pid_track import PIDTrack
-from dynamic_reconfigure.client import Client
-from dynamic_reconfigure.server import Server
-from ainex_interfaces.srv import SetString
-from ainex_interfaces.msg import ObjectsInfo, ColorDetect, ObjectInfo
+from ainex_interfaces.msg import ObjectsInfo, ObjectInfo
+from ainex_kinematics.gait_manager import GaitManager
 
-COLOR_TRACK_PID_YAML = '/home/ubuntu/ros_ws/src/ainex_example/config/color_track_pid.yaml'
+class BasketNavigatorNode:
+    def __init__(self):
+        rospy.init_node('basket_navigator_node')
+        self.gait_manager = GaitManager()
+        self.target_object = None
 
-class ColorTrackNode(Common):
-    def __init__(self, name):
-        rospy.init_node(name)
-        self.name = name
-        self.running = True
-        self.load_param = False
-        self.have_save = False
-        self.object_info = None
-        self.image_process_size = [160, 120]
-        self.head_pan_range = [125, 875]
-        self.head_tilt_range = [315, 625]
-        self.head_pan_init = 500
-        self.head_tilt_init = 500
-        super().__init__(name, self.head_pan_init, self.head_tilt_init)
+        rospy.Subscriber('/object/pixel_coords', ObjectsInfo, self.detection_callback)
+        rospy.on_shutdown(self.shutdown)
 
-        signal.signal(signal.SIGINT, self.shutdown)
+        self.image_width = 640
+        self.center_tolerance = 30
+        self.close_area_threshold = 8000
 
-        self.config = rospy.get_param('~color_track')
-        self.pid_rl = pid.PID(self.config['pid1_p'], self.config['pid1_i'], self.config['pid1_d'])
-        self.pid_ud = pid.PID(self.config['pid2_p'], self.config['pid2_i'], self.config['pid2_d'])
+        rospy.loginfo("? BasketNavigatorNode started.")
 
-        self.rl_track = PIDTrack(self.pid_rl, self.head_pan_range, self.head_pan_init)
-        self.ud_track = PIDTrack(self.pid_ud, self.head_tilt_range, self.head_tilt_init)
+    def shutdown(self):
+        rospy.loginfo("?? Shutting down.")
+        self.gait_manager.stop()
 
-        Server(PIDConfig, self.dynamic_reconfigure_callback)
-        self.load_param = True
-        self.dyn_client = Client(self.name, timeout=10)
-        self.dyn_client.update_configuration(self.config)
-
-        rospy.Subscriber('/object/pixel_coords', ObjectsInfo, self.get_color_callback)
-        rospy.Service('~set_color', SetString, self.set_color_srv_callback)
-
-        # ✅ Publisher for actual tracked object
-        self.tracked_pub = rospy.Publisher("/basket/target", ObjectInfo, queue_size=1)
-
-        self.motion_manager.run_action('stand')
-
-        if rospy.get_param('~start', True):
-            target_color = rospy.get_param('~color', 'blue')
-            self.enter_func(None)
-            self.set_color_srv_callback(String(target_color))
-            self.start_srv_callback(None)
-            common.loginfo('start track %s' % target_color)
-
-    def shutdown(self, signum, frame):
-        self.running = False
-        common.loginfo('%s shutdown' % self.name)
-
-    def set_color_srv_callback(self, msg):
-        param = ColorDetect()
-        param.color_name = msg.data
-        param.use_name = True
-        param.detect_type = 'rect'
-        param.image_process_size = self.image_process_size
-        param.min_area = 10
-        param.max_area = self.image_process_size[0] * self.image_process_size[1]
-        self.detect_pub.publish([param])
-        common.loginfo('%s set_color' % self.name)
-        return [True, 'set_color']
-
-    def dynamic_reconfigure_callback(self, config, level):
-        if self.load_param:
-            self.rl_track.update_pid(pid.PID(config['pid1_p'], config['pid1_i'], config['pid1_d']))
-            self.ud_track.update_pid(pid.PID(config['pid2_p'], config['pid2_i'], config['pid2_d']))
-            self.config.update(config)
-            if config['save']:
-                self.have_save = True
-        return config
-
-    def get_color_callback(self, msg):
-        if msg.data:
-            self.object_info = msg.data[0]
-
-    def process(self, center):
-        if abs(center.x - center.width / 2) < 20:
-            center.x = center.width / 2
-        if abs(center.y - center.height / 2) < 20:
-            center.y = center.height / 2
-        rl_dis = self.rl_track.track(center.x, center.width / 2)
-        ud_dis = self.ud_track.track(center.y, center.height / 2)
-        self.motion_manager.set_servos_position(20, [[23, int(rl_dis)], [24, int(ud_dis)]])
-
-        # ✅ Publish actual detected object with int fields
-        if self.object_info:
-            try:
-                tracked = ObjectInfo()
-                tracked.label = self.object_info.label
-                tracked.type = self.object_info.type
-                tracked.x = int(self.object_info.x)
-                tracked.y = int(self.object_info.y)
-                tracked.width = int(self.object_info.width)
-                tracked.height = int(self.object_info.height)
-                tracked.radius = int(self.object_info.radius)
-                tracked.angle = int(self.object_info.angle)
-                tracked.left_point = [int(x) for x in self.object_info.left_point]
-                tracked.right_point = [int(x) for x in self.object_info.right_point]
-                self.tracked_pub.publish(tracked)
-            except Exception as e:
-                rospy.logwarn(f"[color_track] Failed to publish ObjectInfo: {e}")
+    def detection_callback(self, msg):
+        for obj in msg.data:
+            if obj.label in ["red", "pink"] and obj.type == "rect":
+                self.target_object = obj
+                return
+        self.target_object = None
 
     def run(self):
-        while self.running:
-            if self.start:
-                if self.object_info:
-                    self.process(self.object_info)
-                    self.object_info = None
-                if self.have_save:
-                    self.dyn_client.update_configuration({'save': False})
-                    common.save_yaml_data({'pid': self.config}, COLOR_TRACK_PID_YAML)
-                    self.have_save = False
-                time.sleep(0.02)
-            else:
-                time.sleep(0.01)
+        rate = rospy.Rate(10)
 
-        self.init_action(self.head_pan_init, self.head_tilt_init)
-        self.stop_srv_callback(None)
-        rospy.signal_shutdown('shutdown')
+        while not rospy.is_shutdown():
+            if self.target_object:
+                x = self.target_object.x
+                y = self.target_object.y
+                w = self.target_object.width
+                h = self.target_object.height
+                area = w * h
+                image_center = self.image_width // 2
+
+                rospy.loginfo(f"?? Basket: x={x}, w={w}, area={area}")
+
+                if w >= 600 and h >= 400:
+                    rospy.logwarn_throttle(3, "? Full-frame detection, ignoring.")
+                    self.gait_manager.stop()
+                    rate.sleep()
+                    continue
+
+                if area >= self.close_area_threshold:
+                    rospy.loginfo("? Reached basket. Stopping.")
+                    self.gait_manager.stop()
+                elif x < image_center - self.center_tolerance:
+                    rospy.loginfo("? Turning left")
+                    self.gait_manager.move(2, 0, 0, -3)
+                elif x > image_center + self.center_tolerance:
+                    rospy.loginfo("? Turning right")
+                    self.gait_manager.move(2, 0, 0, 3)
+                else:
+                    rospy.loginfo("? Moving forward")
+                    self.gait_manager.move(2, 0.01, 0, 0)
+            else:
+                rospy.loginfo_throttle(5, "…No target basket detected.")
+                self.gait_manager.stop()
+
+            rate.sleep()
 
 if __name__ == "__main__":
-    ColorTrackNode('color_track').run()
+    try:
+        BasketNavigatorNode().run()
+    except rospy.ROSInterruptException:
+        pass
